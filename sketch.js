@@ -2,19 +2,50 @@ const rules = { X: "F+[[X]-X]-F[-FX]+X", F: "FF" };
 const startingSentence = "X";
 let sentence;
 
-const numGenerations = 7;
+let bg
+
+const numGenerations = 6;
 
 const lineLength = 2;
 const angle = Math.PI / 7.2;
 
 let drawRules;
+let windSpeed = 0;
+let windDelta = 0.001;
+const maxWindSpeed = 0.05;
 
-function expandedSentenceForNumGenerations(numGenerations) {
-  let sentenceToExpand = startingSentence;
-  for (let i = 0; i < numGenerations; i++) {
-    sentenceToExpand = expandSentence(sentenceToExpand);
-  }
-  return sentenceToExpand;
+
+function drawForward() {
+  stroke(100, 50, 0);
+  strokeWeight(2);
+  line(0, 0, 0, -lineLength);
+  translate(0, -lineLength);
+}
+
+function drawLeft() {
+  rotate(-angle + windSpeed);
+}
+
+function drawRight() {
+  rotate(angle + windSpeed);
+}
+
+function popStack() {
+  pop();
+}
+
+function pushStack() {
+  push();
+}
+
+function instantiateDrawRules() {
+  drawRules = {
+    "F": drawForward,
+    "+": drawLeft,
+    "-": drawRight,
+    "[": pushStack,
+    "]": popStack,
+  };
 }
 
 function expandSentence(currentSentence) {
@@ -29,6 +60,14 @@ function expandSentence(currentSentence) {
   return expandedSentence;
 }
 
+function expandedSentenceForNumGenerations(numGenerations) {
+  let sentenceToExpand = startingSentence;
+  for (let i = 0; i < numGenerations; i++) {
+    sentenceToExpand = expandSentence(sentenceToExpand);
+  }
+  return sentenceToExpand;
+}
+
 function parseSentence(sentence) {
   for (let i = 0; i < sentence.length; i++) {
     if (drawRules[sentence[i]]) {
@@ -37,44 +76,12 @@ function parseSentence(sentence) {
   }
 }
 
-function drawForward() {
-  stroke(100, 50, 0);
-  strokeWeight(2);
-  line(0, 0, 0, -lineLength);
-  translate(0, -lineLength);
-}
-
-function drawLeft() {
-  rotate(-angle);
-}
-
-function drawRight() {
-  rotate(angle);
-}
-
-function popStack() {
-  pop();
-}
-
-function pushStack() {
-  push();
-}
-
-function instantiateDrawRules() {
-  drawRules = {
-    F: drawForward,
-    "+": drawLeft,
-    "-": drawRight,
-    "[": pushStack,
-    "]": popStack,
-  };
-}
-
 function setup() {
+  bg = loadImage('assets/sunset.jpg');
   createCanvas(600, 600);
   instantiateDrawRules();
   sentence = expandedSentenceForNumGenerations(numGenerations);
-  console.log(sentence);
+  // console.log(sentence);
 }
 
 function drawPlant() {
@@ -83,7 +90,20 @@ function drawPlant() {
   parseSentence(sentence);
 }
 
+function updateWindSpeed(){
+  // windSpeed += windDelta
+  // if (abs(windSpeed) > maxWindSpeed)
+  // {
+  //   windDelta = -windDelta;
+  // }
+  // console.log(windSpeed);
+  windSpeed = (-0.5 + noise(frameCount/200)) * 0.1;
+
+}
+
 function draw() {
-  background(220);
+  background(bg);
+  sunset_color = color(255, 255, 255);
+  updateWindSpeed();
   drawPlant();
 }
