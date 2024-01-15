@@ -2,23 +2,69 @@ const rules = { X: "F+[[X]-X]-F[-FX]+X", F: "FF" };
 const startingSentence = "X";
 let sentence;
 
-let bg
-
+let drawRules;
 const numGenerations = 6;
 
-const lineLength = 2;
+let maxGrowthAllowed = 0;
+let growthRate = 1;
+let growthLeft = 0;
+let hasFinishedGrowing;
+
+const lineLength = 2.5;
 const angle = Math.PI / 7.2;
 
-let drawRules;
 let windSpeed = 0;
-let windDelta = 0.001;
-const maxWindSpeed = 0.05;
 
+let bg;
+let deadFramesCount = 0;
+
+const PlantSubType = {
+  LEAF: "LEAF",
+  BRANCH: "BRANCH",
+};
+
+function computeGrowthAllowed(plantSubtype) {
+  if(plantSubtype === PlantSubType.LEAF) {
+    return computeGrowthAllowedForLeaf();
+  } else if(plantSubtype === PlantSubType.BRANCH) {
+    return computeGrowthAllowedForBranch();
+  }
+}
+
+function computeGrowthAllowedForBranch() {
+  if (growthLeft > lineLength) {
+    lerp_percentage = 1.;
+    growthLeft -= lineLength;
+  } else if (growthLeft <= 0) {
+    lerp_percentage = 0.;
+  } else {
+    lerp_percentage = growthLeft / lineLength;
+    growthLeft -= lerp_percentage * lineLength;
+  }
+  return lerp_percentage;
+}
+
+function computeGrowthAllowedForLeaf() {
+  if (growthLeft > lineLength) {
+    lerp_percentage = 1.;
+    growthLeft -= lineLength;
+  } else if (growthLeft <= 0) {
+    lerp_percentage = 0.;
+  } else {
+    lerp_percentage = growthLeft / lineLength;
+    growthLeft -= lerp_percentage * lineLength;
+  }
+  return lerp_percentage;
+}
 
 function drawForward() {
   stroke(100, 50, 0);
   strokeWeight(2);
-  line(0, 0, 0, -lineLength);
+  lerp_percentage = computeGrowthAllowed(PlantSubType.BRANCH);
+  if (lerp_percentage > 0) {
+    line(0, 0, 0, -lineLength * lerp_percentage);
+
+  }
   translate(0, -lineLength);
 }
 
@@ -31,6 +77,7 @@ function drawRight() {
 }
 
 function popStack() {
+  drawLeaf();
   pop();
 }
 
@@ -40,7 +87,7 @@ function pushStack() {
 
 function instantiateDrawRules() {
   drawRules = {
-    "F": drawForward,
+    F: drawForward,
     "+": drawLeft,
     "-": drawRight,
     "[": pushStack,
@@ -76,12 +123,29 @@ function parseSentence(sentence) {
   }
 }
 
-function setup() {
-  bg = loadImage('assets/sunset.jpg');
-  createCanvas(600, 600);
-  instantiateDrawRules();
-  sentence = expandedSentenceForNumGenerations(numGenerations);
-  // console.log(sentence);
+function updateWindSpeed() {
+  let windSmooth = (frameCount-deadFramesCount) / 200; // the smaller the windSmoothParameter, the smoother the wind will change
+  let windPower = 0.1; // the smaller the windPowerParameter, the less powerful the wind will be
+  let windBias = -0.2; // controls left or right wind
+  windSpeed = (windBias + noise(windSmooth)) * windPower;
+}
+
+function updateGrowthAllowed() {
+  growthRate *= 1.05;
+  // if not all growth has been used, it means the plant has finished growing
+  if (growthLeft > 0) {
+    hasFinishedGrowing = true;
+  }
+  if (!hasFinishedGrowing) {
+    maxGrowthAllowed += growthRate;
+  }
+  growthLeft = maxGrowthAllowed;
+}
+
+function drawLeaf() {
+  fill(0, 255, 0);
+  noStroke();
+  ellipse(0, 0, 2, 2);
 }
 
 function drawPlant() {
@@ -90,20 +154,16 @@ function drawPlant() {
   parseSentence(sentence);
 }
 
-function updateWindSpeed(){
-  // windSpeed += windDelta
-  // if (abs(windSpeed) > maxWindSpeed)
-  // {
-  //   windDelta = -windDelta;
-  // }
-  // console.log(windSpeed);
-  windSpeed = (-0.5 + noise(frameCount/200)) * 0.1;
-
+function setup() {
+  bg = loadImage("assets/sunset.jpg");
+  createCanvas(600, 600);
+  instantiateDrawRules();
+  sentence = expandedSentenceForNumGenerations(numGenerations);
 }
 
 function draw() {
   background(bg);
-  sunset_color = color(255, 255, 255);
-  updateWindSpeed();
   drawPlant();
+  updateGrowthAllowed();
+  updateWindSpeed();
 }

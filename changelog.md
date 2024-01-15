@@ -1,10 +1,10 @@
 
 ## To do
 * Stochastic plant
-* Plant growth simulation
 * Leaves/Fruit
 
 
 ## Added
+* Plant growth simulation
 * Wind 
 * L-system for creating plant
