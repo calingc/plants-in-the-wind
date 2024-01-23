@@ -223,10 +223,6 @@ function setup() {
   insntatiateColors();
 }
 
-if (shouldGenerateSentence) {
-  sentence = expandedSentenceForNumGenerations(numGenerations);
-}
-
 function generateSentenceIfNeeded() {
   if (shouldGenerateSentence) {
     sentence = expandedSentenceForNumGenerations(numGenerations);
