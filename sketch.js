@@ -139,7 +139,7 @@ function instantiateDrawRules() {
 }
 
 function sampleRule(rules) {
-  let rand = random();
+  let rand = Math.random();
   let sum = 0;
   for (let i = 0; i < rules.length; i++) {
     sum += rules[i].prob;
